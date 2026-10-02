@@ -3,17 +3,36 @@ import type { Network } from "../core/network";
 import type { Location } from "../types";
 import LocationSearch from "./LocationSearch";
 
-interface ParticipantFormProps {
-  network: Network;
-  disabled: boolean;
-  onAdd: (name: string, location: Location, photoUrl: string | undefined) => void;
+export interface ParticipantDraft {
+  name: string;
+  location: Location;
+  photoUrl: string | undefined;
 }
 
-const ParticipantForm = ({ network, disabled, onAdd }: ParticipantFormProps) => {
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState<Location | null>(null);
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [showPhoto, setShowPhoto] = useState(false);
+interface ParticipantFormProps {
+  network: Network;
+  initial?: ParticipantDraft;
+  submitLabel: string;
+  disabled?: boolean;
+  onSubmit: (draft: ParticipantDraft) => void;
+  onCancel?: () => void;
+}
+
+const inputClass =
+  "rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900 disabled:bg-stone-100";
+
+const ParticipantForm = ({
+  network,
+  initial,
+  submitLabel,
+  disabled = false,
+  onSubmit,
+  onCancel,
+}: ParticipantFormProps) => {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [location, setLocation] = useState<Location | null>(initial?.location ?? null);
+  const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl ?? "");
+  const [showPhoto, setShowPhoto] = useState(Boolean(initial?.photoUrl));
 
   const locationLabel =
     location === null
@@ -27,7 +46,8 @@ const ParticipantForm = ({ network, disabled, onAdd }: ParticipantFormProps) => 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit || location === null) return;
-    onAdd(name.trim(), location, photoUrl.trim() || undefined);
+    onSubmit({ name: name.trim(), location, photoUrl: photoUrl.trim() || undefined });
+    if (initial) return;
     setName("");
     setLocation(null);
     setPhotoUrl("");
@@ -43,7 +63,8 @@ const ParticipantForm = ({ network, disabled, onAdd }: ParticipantFormProps) => 
           disabled={disabled}
           onChange={(event) => setName(event.target.value)}
           placeholder="Prénom"
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900 disabled:bg-stone-100 sm:w-36"
+          aria-label="Prénom"
+          className={`${inputClass} sm:w-36`}
         />
         <div className="flex-1">
           {location === null ? (
@@ -62,13 +83,24 @@ const ParticipantForm = ({ network, disabled, onAdd }: ParticipantFormProps) => 
             </div>
           )}
         </div>
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:bg-stone-300"
-        >
-          Ajouter
-        </button>
+        <div className="flex gap-2">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-lg border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50"
+            >
+              Annuler
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="flex-1 rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:bg-stone-300"
+          >
+            {submitLabel}
+          </button>
+        </div>
       </div>
       {showPhoto ? (
         <input
@@ -77,7 +109,8 @@ const ParticipantForm = ({ network, disabled, onAdd }: ParticipantFormProps) => 
           disabled={disabled}
           onChange={(event) => setPhotoUrl(event.target.value)}
           placeholder="URL de la photo (optionnel)"
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900 disabled:bg-stone-100"
+          aria-label="URL de la photo"
+          className={inputClass}
         />
       ) : (
         <button

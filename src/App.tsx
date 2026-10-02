@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import MapView, { type MapParticipant } from "./components/MapView";
-import ParticipantForm from "./components/ParticipantForm";
+import ParticipantForm, { type ParticipantDraft } from "./components/ParticipantForm";
 import ParticipantList from "./components/ParticipantList";
 import type { ParticipantDisplay } from "./components/ResultCard";
 import ResultList from "./components/ResultList";
@@ -9,7 +9,7 @@ import { availableParticipants, rankStations, topResults } from "./core/ranking"
 import { MAX_PARTICIPANTS } from "./core/url-state";
 import { useNetwork } from "./hooks/use-network";
 import { useUrlState } from "./hooks/use-url-state";
-import type { Location, Participant } from "./types";
+import type { Participant } from "./types";
 
 const newId = (): string => Math.random().toString(36).slice(2, 8);
 
@@ -62,13 +62,21 @@ const App = () => {
       })
     : [];
 
-  const addParticipant = (name: string, location: Location, photoUrl: string | undefined) =>
+  const addParticipant = (draft: ParticipantDraft) =>
     update((previous) => ({
       ...previous,
-      participants: [
-        ...previous.participants,
-        { id: newId(), name, location, available: true, photoUrl },
-      ].slice(0, MAX_PARTICIPANTS),
+      participants: [...previous.participants, { id: newId(), available: true, ...draft }].slice(
+        0,
+        MAX_PARTICIPANTS,
+      ),
+    }));
+
+  const updateParticipant = (participantId: string, draft: ParticipantDraft) =>
+    update((previous) => ({
+      ...previous,
+      participants: previous.participants.map((participant) =>
+        participant.id === participantId ? { ...participant, ...draft } : participant,
+      ),
     }));
 
   const toggleParticipant = (participantId: string) =>
@@ -87,13 +95,8 @@ const App = () => {
       participants: previous.participants.filter((participant) => participant.id !== participantId),
     }));
 
-  const share = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: "On se retrouve où ?", url }).catch(() => undefined);
-      return;
-    }
-    await navigator.clipboard.writeText(url);
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
   };
@@ -119,11 +122,11 @@ const App = () => {
           </div>
           <button
             type="button"
-            onClick={share}
+            onClick={copyLink}
             disabled={state.participants.length === 0}
             className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 disabled:opacity-50"
           >
-            {copied ? "Lien copié !" : "Partager"}
+            {copied ? "Lien copié !" : "Copier le lien"}
           </button>
         </header>
 
@@ -141,12 +144,14 @@ const App = () => {
                 participants={state.participants}
                 colorOf={colorOf}
                 onToggle={toggleParticipant}
+                onUpdate={updateParticipant}
                 onRemove={removeParticipant}
               />
               <ParticipantForm
                 network={network}
                 disabled={state.participants.length >= MAX_PARTICIPANTS}
-                onAdd={addParticipant}
+                submitLabel="Ajouter"
+                onSubmit={addParticipant}
               />
             </section>
             {state.participants.length > 0 && (
