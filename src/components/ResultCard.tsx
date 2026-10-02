@@ -1,4 +1,4 @@
-import { barsNearbyUrl } from "../core/external-maps";
+import { barsNearbyLinks } from "../core/external-maps";
 import type { LineStyle, RankedStation } from "../types";
 import LineBadge from "./LineBadge";
 
@@ -26,7 +26,7 @@ const ResultCard = ({
   onChoose,
   onUnchoose,
 }: ResultCardProps) => {
-  const bars = barsNearbyUrl(entry.station.lat, entry.station.lon);
+  const barLinks = barsNearbyLinks(entry.station.lat, entry.station.lon);
   const average = Math.round(entry.total / entry.times.length);
   const sortedTimes = [...entry.times].sort((a, b) => b.minutes - a.minutes);
 
@@ -87,14 +87,17 @@ const ResultCard = ({
         })}
       </ul>
       <footer className="mt-3 flex flex-wrap gap-2">
-        <a
-          href={bars.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50"
-        >
-          {bars.label}
-        </a>
+        {barLinks.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50"
+          >
+            {link.label}
+          </a>
+        ))}
         {isChosen ? (
           <button
             type="button"
