@@ -26,7 +26,7 @@ const ResultCard = ({
   onChoose,
   onUnchoose,
 }: ResultCardProps) => {
-  const bars = barsNearbyUrl(entry.station.lat, entry.station.lon, navigator.userAgent);
+  const bars = barsNearbyUrl(entry.station.lat, entry.station.lon);
   const average = Math.round(entry.total / entry.times.length);
   const sortedTimes = [...entry.times].sort((a, b) => b.minutes - a.minutes);
 
