@@ -34,7 +34,7 @@ export interface Participant {
   photoUrl?: string;
 }
 
-export const SORT_MODES = ["max", "total", "spread"] as const;
+export const SORT_MODES = ["total", "max", "spread"] as const;
 export type SortMode = (typeof SORT_MODES)[number];
 
 export interface AppState {

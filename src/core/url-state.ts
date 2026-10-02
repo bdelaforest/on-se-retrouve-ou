@@ -8,16 +8,23 @@ const LEGACY_PARAM = "s";
 const LEGACY_VERSION = 1;
 const STATION_ID_PREFIX = "IDFM:";
 const COORDINATE_SCALE = 1e5;
+const SORT_MODE_CODES: readonly SortMode[] = ["max", "total", "spread"];
+const DEFAULT_SORT_MODE: SortMode = "total";
 export const MAX_PARTICIPANTS = 10;
 
-export const EMPTY_STATE: AppState = { participants: [], chosenStationId: null, sortMode: "max" };
+export const EMPTY_STATE: AppState = { participants: [], chosenStationId: null, sortMode: DEFAULT_SORT_MODE };
 
 export function encodeState(state: AppState): string {
-  if (state.participants.length === 0 && state.chosenStationId === null && state.sortMode === "max")
+  if (
+    state.participants.length === 0 &&
+    state.chosenStationId === null &&
+    state.sortMode === DEFAULT_SORT_MODE
+  ) {
     return "";
+  }
   const writer = new ByteWriter();
   writer.u8(BINARY_VERSION);
-  writer.u8((state.chosenStationId ? 1 : 0) | (SORT_MODES.indexOf(state.sortMode) << 1));
+  writer.u8((state.chosenStationId ? 1 : 0) | (SORT_MODE_CODES.indexOf(state.sortMode) << 1));
   if (state.chosenStationId) writer.u24(stationNumber(state.chosenStationId));
   const participants = state.participants.slice(0, MAX_PARTICIPANTS);
   writer.u8(participants.length);
@@ -57,7 +64,7 @@ function decodeBinary(encoded: string): AppState {
     if (reader.u8() !== BINARY_VERSION) return EMPTY_STATE;
     const header = reader.u8();
     const chosenStationId = header & 1 ? stationId(reader.u24()) : null;
-    const sortMode = SORT_MODES[(header >> 1) & 3] ?? "max";
+    const sortMode = SORT_MODE_CODES[(header >> 1) & 3] ?? DEFAULT_SORT_MODE;
     const count = Math.min(reader.u8(), MAX_PARTICIPANTS);
     const participants: Participant[] = [];
     for (let index = 0; index < count; index++) participants.push(readParticipant(reader, `p${index + 1}`));
@@ -198,7 +205,7 @@ function decodeLegacy(encoded: string): AppState {
     return {
       participants,
       chosenStationId: typeof parsed.c === "string" ? parsed.c : null,
-      sortMode: isSortMode(parsed.o) ? parsed.o : "max",
+      sortMode: isSortMode(parsed.o) ? parsed.o : DEFAULT_SORT_MODE,
     };
   } catch {
     return EMPTY_STATE;
