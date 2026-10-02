@@ -10,3 +10,11 @@ body,
 body {
   @apply bg-stone-50 text-stone-900 antialiased;
 }
+
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
