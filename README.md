@@ -1,5 +1,7 @@
 # On se retrouve où ?
 
+**Application en ligne : <https://bdelaforest.github.io/on-se-retrouve-ou/>**
+
 Application web statique qui trouve la station de métro parisienne la plus équitable pour un groupe : on
 saisit les points de départ de chacun, on coche les personnes disponibles, et l'application classe les
 stations de Paris intra-muros selon le temps de trajet maximal, total ou l'écart entre participants.
